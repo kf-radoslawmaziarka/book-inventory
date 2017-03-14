@@ -7,8 +7,8 @@ describe('Book inventory', function() {
         
         request(app).
         post('/stock').
+        set('Accept', 'application/json').
         send({ isbn: '1234', count: 10 }).
-        expect('Content-Type', /json/).
         expect(200, { isbn: '1234', count: 10 }, done);
     });
 
@@ -20,7 +20,6 @@ describe('Book inventory', function() {
         request(app).
         get('/stock/4321').
         set('Accept', 'application/json').
-        expect('Content-Type', /json/).
         expect(200, { count: 1 }, done);
     });
 });
