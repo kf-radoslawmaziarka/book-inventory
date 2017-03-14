@@ -1,7 +1,5 @@
 var express = require('express');
 var bodyParser = require('body-parser');
-var app = express();
-var stockRepository = require('./stockRepository');
 
 function logger(req, res, next) {
     console.log("incoming GET request at ", new Date());
@@ -20,49 +18,53 @@ var serverError = function(err, req, res, next) {
     res.status(status).send('Oh no: ' + status);
 };
 
-app.use(bodyParser.json());
+module.exports = function(stockRepository) {
+    var app = express();
 
-app.post('/stock', function(req, res, next) {
-    stockRepository.
-    stockUp(req.body.isbn, req.body.count).
-    then(function() {
-        res.json({ isbn: req.body.isbn, count: req.body.count });
-    }).
-    catch(next);
-});
+    app.use(bodyParser.json());
 
-app.get('/stock', function(req, res, next) {
-    stockRepository.
-    findAll().
-    then(function(results) {
-        res.json(results);
-    }).
-    catch(next);
-});
+    app.post('/stock', function(req, res, next) {
+        stockRepository.
+        stockUp(req.body.isbn, req.body.count).
+        then(function() {
+            res.json({ isbn: req.body.isbn, count: req.body.count });
+        }).
+        catch(next);
+    });
 
-app.get('/stock/:isbn', function(req, res, next) {
-    stockRepository.
-    getCount(req.params.isbn).
-    then(function(result) {
-        if (result == null) {
-            next();
-            // res.status(404).send('No book with isbn ' + req.params.isbn);
-        } else {
-            res.json({ count: result });
-        }
-    }).
-    catch(next);
-});
+    app.get('/stock', function(req, res, next) {
+        stockRepository.
+        findAll().
+        then(function(results) {
+            res.json(results);
+        }).
+        catch(next);
+    });
 
-app.get('/', logger, function(req, res) {
-    res.send('Hello World!');
-});
+    app.get('/stock/:isbn', function(req, res, next) {
+        stockRepository.
+        getCount(req.params.isbn).
+        then(function(result) {
+            if (result == null) {
+                next();
+                // res.status(404).send('No book with isbn ' + req.params.isbn);
+            } else {
+                res.json({ count: result });
+            }
+        }).
+        catch(next);
+    });
 
-app.get('/error', function(req, res, next) {
-    throw "error";
-});
+    app.get('/', logger, function(req, res) {
+        res.send('Hello World!');
+    });
 
-app.use(clientError);
-app.use(serverError);
+    app.get('/error', function(req, res, next) {
+        throw "error";
+    });
 
-module.exports = app;
+    app.use(clientError);
+    app.use(serverError);
+
+    return app;
+};
